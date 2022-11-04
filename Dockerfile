@@ -1,4 +1,6 @@
 FROM dockcross/manylinux2014-aarch64:20210925-32768e3
+#unset variable targeting preferring one arch from other - this image is designed to be environment to build to any platform
+ENV AUDITWHEEL_ARCH= AUDITWHEEL_PLAT= DEFAULT_DOCKCROSS_IMAGE= CROSS_TRIPLE= CROSS_ROOT= AS= AR= CC= CPP= CXX= LD= FC= CMAKE_TOOLCHAIN_FILE= CROSS_COMPILE= ARCH=
 ENTRYPOINT ["/bin/bash"]
 #ARG EPEL7_PRE_MINGW_REMOVE=http://mirrors.nipa.cloud/epel/7/x86_64/Packages
 ARG EPEL7_PRE_MINGW_REMOVE=https://dl.fedoraproject.org/pub/archive/epel/7.2019-05-29/x86_64/Packages
