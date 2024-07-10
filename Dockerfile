@@ -1,12 +1,18 @@
-FROM dockcross/manylinux2014-aarch64:20210925-32768e3
-#unset variable targeting preferring one arch from other - this image is designed to be environment to build to any platform
-ENV AUDITWHEEL_ARCH= AUDITWHEEL_PLAT= DEFAULT_DOCKCROSS_IMAGE= CROSS_TRIPLE= CROSS_ROOT= AS= AR= CC= CPP= CXX= LD= FC= CMAKE_TOOLCHAIN_FILE= CROSS_COMPILE= ARCH=
-ENTRYPOINT ["/bin/bash"]
-#ARG EPEL7_PRE_MINGW_REMOVE=http://mirrors.nipa.cloud/epel/7/x86_64/Packages
-ARG EPEL7_PRE_MINGW_REMOVE=https://dl.fedoraproject.org/pub/archive/epel/7.2019-05-29/x86_64/Packages
-RUN rpm -i $EPEL7_PRE_MINGW_REMOVE/m/mingw-binutils-generic-2.25-1.el7.x86_64.rpm $EPEL7_PRE_MINGW_REMOVE/m/mingw64-binutils-2.25-1.el7.x86_64.rpm $EPEL7_PRE_MINGW_REMOVE/m/mingw64-filesystem-101-1.el7.noarch.rpm $EPEL7_PRE_MINGW_REMOVE/m/mingw-filesystem-base-101-1.el7.noarch.rpm
-RUN rpm -i $EPEL7_PRE_MINGW_REMOVE/m/mingw64-cpp-4.9.3-1.el7.x86_64.rpm $EPEL7_PRE_MINGW_REMOVE/m/mingw64-crt-4.0.4-3.el7.noarch.rpm $EPEL7_PRE_MINGW_REMOVE/m/mingw64-headers-4.0.4-5.el7.noarch.rpm $EPEL7_PRE_MINGW_REMOVE/m/mingw64-winpthreads-4.0.4-1.el7.noarch.rpm $EPEL7_PRE_MINGW_REMOVE/m/mingw64-winpthreads-static-4.0.4-1.el7.noarch.rpm
-RUN rpm -i $EPEL7_PRE_MINGW_REMOVE/m/mingw64-gcc-4.9.3-1.el7.x86_64.rpm
-
-#install rustup-init without installing rust itself
-RUN curl https://static.rust-lang.org/rustup/dist/x86_64-unknown-linux-gnu/rustup-init -o /usr/local/bin/rustup-init && chmod a+x /usr/local/bin/rustup-init
+FROM ghcr.io/galkinvv/manycross2014:main
+ARG DOCKER_RUST_VERSION
+ENV CARGO_HOME=/cargo RUSTUP_HOME=/cargo/rustup
+# profile minimal is needed to avoid huge rust-docs
+RUN mkdir -p "${RUSTUP_HOME}" && rustup-init -y --profile minimal --no-modify-path --default-toolchain ${DOCKER_RUST_VERSION} -t x86_64-win7-windows-gnu -t x86_64-pc-windows-gnu -t x86_64-unknown-linux-musl -t aarch64-unknown-linux-musl -t aarch64-unknown-linux-gnu -c rust-src -c rust-analyzer -c clippy -c rustfmt
+RUN echo 'exec aarch64-unknown-linux-gnueabi-gcc "$@" -lgcc' > ${CARGO_HOME}/bin/aarch64-unknown-linux-musl-gcc-wrap && echo '\
+  for arg in "$@"; do\
+    arg="${arg/#-lsynchronization/-lmsvcrt}";\
+    arg="${arg/#rsbegin.o//cargo/rustup/toolchains/'${DOCKER_RUST_VERSION}'-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-pc-windows-gnu/lib/rsbegin.o}";\
+    arg="${arg/#rsend.o//cargo/rustup/toolchains/'${DOCKER_RUST_VERSION}'-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-pc-windows-gnu/lib/rsend.o}";\
+    processed_args+=("${arg}");\
+  done;\
+  exec /usr/bin/x86_64-w64-mingw32-gcc "${processed_args[@]}"' > ${CARGO_HOME}/bin/x86_64-w64-mingw32-gcc-win7 && \
+  chmod a+x ${CARGO_HOME}/bin/*
+ENV PATH="${CARGO_HOME}/bin:${PATH}"\
+  CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-unknown-linux-musl-gcc-wrap\
+  CARGO_TARGET_X86_64_WIN7_WINDOWS_GNU_LINKER=x86_64-w64-mingw32-gcc-win7\
+  CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-unknown-linux-gnueabi-gcc
