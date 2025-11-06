@@ -1,7 +1,7 @@
 FROM dockcross/manylinux2014-aarch64:20251011-8b9ace4 AS build
 # keep rustup without keeping rust itself
+RUN rm -rf /opt/_internal/cp* /opt/_internal/pp* /opt/_internal/pipx /opt/_internal/xc
 RUN rustup toolchain uninstall stable-x86_64-unknown-linux-gnu
-RUN rm -rf /opt/_internal
 RUN rpm -e kernel-debug-devel systemtap-devel
 #ARG EPEL7_PRE_MINGW_REMOVE=http://mirrors.nipa.cloud/epel/7/x86_64/Packages
 ARG EPEL7_PRE_MINGW_REMOVE=https://dl.fedoraproject.org/pub/archive/epel/7.2019-05-29/x86_64/Packages
