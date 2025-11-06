@@ -1,5 +1,7 @@
 FROM dockcross/manylinux2014-aarch64:20210925-32768e3 AS build
 # keep rustup without keeping rust itself
+ENV PATH=/opt/rustup/cargo/bin:/opt/rh/devtoolset-10/root/usr/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/xcc/aarch64-unknown-linux-gnu/bin
+ENV RUSTUP_HOME=/opt/rustup CARGO_HOME=/opt/rustup/cargo/
 RUN rustup toolchain uninstall stable-x86_64-unknown-linux-gnu
 RUN rm -rf /opt/_internal
 RUN rpm -e kernel-debug-devel systemtap-devel
