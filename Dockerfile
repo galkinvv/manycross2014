@@ -1,4 +1,4 @@
-FROM dockcross/manylinux2014-aarch64:20210925-32768e3 as build
+FROM dockcross/manylinux2014-aarch64:20210925-32768e3 AS build
 # keep rustup without keeping rust itself
 RUN rustup toolchain uninstall stable-x86_64-unknown-linux-gnu
 RUN rm -rf /opt/_internal
