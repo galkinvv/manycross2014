@@ -18,3 +18,13 @@ exec ${CARGO_HOME}../toolchains/${DOCKER_RUST_VERSION}-x86_64-unknown-linux-gnu/
     /usr/x86_64-w64-mingw32/sys-root/mingw/lib/crt2.o "\$@"
 EOF
 ENV CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER=rlldriver-x86_64-w64-mingw32-ld
+COPY --chmod=755 <<EOF ${CARGO_HOME}/bin/rlldriver-x86_64-w64-mingw32win7-ld
+#!/bin/bash
+for arg in "\$@"; do
+    [[ "\${arg}" == "-lsynchronization" ]] && continue
+    [[ "\${arg}" == "rsbegin.o" ]] || [[ "\${arg}" == "rsend.o" ]] && arg=${CARGO_HOME}../toolchains/${DOCKER_RUST_VERSION}-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-pc-windows-gnu/lib/\$arg
+    processed_args+=("\${arg}")
+done
+exec ${CARGO_HOME}/bin/rlldriver-x86_64-w64-mingw32-ld "\${processed_args[@]}"
+EOF
+ENV CARGO_TARGET_X86_64_WIN7_WINDOWS_GNU_LINKER=rlldriver-x86_64-w64-mingw32win7-ld
